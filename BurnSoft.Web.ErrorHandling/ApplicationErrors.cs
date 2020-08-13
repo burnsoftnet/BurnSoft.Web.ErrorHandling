@@ -1,167 +1,186 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
+// ReSharper disable RedundantAssignment
+// ReSharper disable PossibleNullReferenceException
+// ReSharper disable ReturnValueOfPureMethodIsNotUsed
+// ReSharper disable UnusedMember.Global
 
 namespace BurnSoft.Web.ErrorHandling
 {
+    /// <summary>
+    /// Simple Library that can help send error messages from your website to you or your support email about any application exception errors that have occurred in a pretty HTML report.
+    /// Somethings you might need to get the exact exception that occurred as well as any Session information that you can use to recreate or diagnose the issue depending on how you currently use your session variables.
+    /// </summary>
     public class ApplicationErrors
     {
-        
-        public static void SendHtmlError(Exception Ex, string to, string from, string smtpServer,string smtpUser, string smtpPwd )
+        /// <summary>
+        /// Send the HTML report of the exception that occured to support or the developer
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="to"></param>
+        /// <param name="from"></param>
+        /// <param name="smtpServer"></param>
+        /// <param name="smtpUser"></param>
+        /// <param name="smtpPwd"></param>
+        /// <example>
+        ///  void Application_Error(object sender, EventArgs e) <br/>
+        /// { <br/>
+        ///    Exception myErr = Server.GetLastError().GetBaseException(); <br/>
+        ///    BurnSoft.Web.ErrorHandling.ApplicationErrors.SendHtmlError(myErr,"tosomeone@test.com", "siteSupport@test.com", "smtp.test.com", "siteSupport@test.com", "12345"); <br/>
+        /// } <br/>
+        /// <br/>
+        /// void Session_Start(Object sender, EventArgs e) <br/>
+        /// { <br/>
+        ///    Session["ERRORMESSAGE"] = ""; <br/>
+        /// } <br/>
+        /// </example>
+        public static void SendHtmlError(Exception ex, string to, string from, string smtpServer,string smtpUser, string smtpPwd )
         {
             var strTo = new MailAddress(to);
             var myFrom = new MailAddress(from);
-            var Message = new MailMessage(myFrom, strTo);
-            Message.IsBodyHtml = true;
-            Message.Subject = HttpContext.Current.Request.ServerVariables["HTTP_HOST"] + " - An Application Error Has occured!";
-            Message.Body = GetHTMLError(Ex);
-            var Client = new SmtpClient(smtpServer);
+            var message = new MailMessage(myFrom, strTo)
+            {
+                IsBodyHtml = true,
+                Subject = HttpContext.Current.Request.ServerVariables["HTTP_HOST"] +
+                          " - An Application Error Has occured!",
+                Body = GetHtmlError(ex)
+            };
+            var client = new SmtpClient(smtpServer);
             if (smtpPwd?.Length > 0)
             {
-                Client.Credentials = new NetworkCredential(smtpUser, smtpPwd);
+                client.Credentials = new NetworkCredential(smtpUser, smtpPwd);
             }
 
-            Client.Send(Message);
+            client.Send(message);
         }
 
         /// <summary>
         /// Returns HTML an formatted error message.
         /// </summary>
-        /// <param name="Ex">The ex.</param>
+        /// <param name="ex">The ex.</param>
         /// <returns>System.String.</returns>
-        public static string GetHTMLError(Exception Ex)
+        public static string GetHtmlError(Exception ex)
         {
-            string Heading;
-            string MyHTML;
-            var Error_Info = new NameValueCollection();
-            Heading = "<TABLE BORDER=\"0\" WIDTH=\"100%\" CELLPADDING=\"1\" CELLSPACING=\"0\"><TR><TD bgcolor=\"RoyalBlue\" COLSPAN=\"2\"><FONT face=\"Arial\" color=\"white\"><B> <!--HEADER--></B></FONT></TD></TR></TABLE>";
-            MyHTML = "<FONT face=\"Arial\" size=\"4\" color=\"red\">Error - " + Ex.Message + "</FONT><BR><BR>";
-            Error_Info.Add("Message", CleanHTML(Ex.Message));
-            HttpContext.Current.Session["ERRORMESSAGE"] = CleanHTML(Ex.Message);
-            Error_Info.Add("Source", CleanHTML(Ex.Source));
-            Error_Info.Add("TargetSite", CleanHTML(Ex.TargetSite.ToString()));
-            Error_Info.Add("StackTrace", CleanHTML(Ex.StackTrace));
-            MyHTML += Heading.Replace("<!--HEADER-->", "Error Information");
-            MyHTML += CollectionToHtmlTable(Error_Info);
+            var errorInfo = new NameValueCollection();
+            var heading = "<TABLE BORDER=\"0\" WIDTH=\"100%\" CELLPADDING=\"1\" CELLSPACING=\"0\"><TR><TD bgcolor=\"RoyalBlue\" COLSPAN=\"2\"><FONT face=\"Arial\" color=\"white\"><B> <!--HEADER--></B></FONT></TD></TR></TABLE>";
+            var myHtml = "<FONT face=\"Arial\" size=\"4\" color=\"red\">Error - " + ex.Message + "</FONT><BR><BR>";
+            errorInfo.Add("Message", CleanHtml(ex.Message));
+            HttpContext.Current.Session["ERRORMESSAGE"] = CleanHtml(ex.Message);
+            errorInfo.Add("Source", CleanHtml(ex.Source));
+            errorInfo.Add("TargetSite", CleanHtml(ex.TargetSite.ToString()));
+            errorInfo.Add("StackTrace", CleanHtml(ex.StackTrace));
+            myHtml += heading.Replace("<!--HEADER-->", "Error Information");
+            myHtml += CollectionToHtmlTable(errorInfo);
             // // QueryString Collection
-            MyHTML += "<BR><BR>" + Heading.Replace("<!--HEADER-->", "QueryString Collection");
-            MyHTML += CollectionToHtmlTable(HttpContext.Current.Request.QueryString);
+            myHtml += "<BR><BR>" + heading.Replace("<!--HEADER-->", "QueryString Collection");
+            myHtml += CollectionToHtmlTable(HttpContext.Current.Request.QueryString);
             // // Form Collection
-            MyHTML += "<BR><BR>" + Heading.Replace("<!--HEADER-->", "Form Collection");
-            MyHTML += CollectionToHtmlTable(HttpContext.Current.Request.Form);
+            myHtml += "<BR><BR>" + heading.Replace("<!--HEADER-->", "Form Collection");
+            myHtml += CollectionToHtmlTable(HttpContext.Current.Request.Form);
             // // Cookies Collection
-            MyHTML += "<BR><BR>" + Heading.Replace("<!--HEADER-->", "Cookies Collection");
-            MyHTML += CollectionToHtmlTable(HttpContext.Current.Request.Cookies);
+            myHtml += "<BR><BR>" + heading.Replace("<!--HEADER-->", "Cookies Collection");
+            myHtml += CollectionToHtmlTable(HttpContext.Current.Request.Cookies);
             // // Session Variables
-            MyHTML += "<BR><BR>" + Heading.Replace("<!--HEADER-->", "Session Variables");
-            MyHTML += CollectionToHtmlTable(HttpContext.Current.Session);
+            myHtml += "<BR><BR>" + heading.Replace("<!--HEADER-->", "Session Variables");
+            myHtml += CollectionToHtmlTable(HttpContext.Current.Session);
             // // Server Variables
-            MyHTML += "<BR><BR>" + Heading.Replace("<!--HEADER-->", "Server Variables");
-            MyHTML += CollectionToHtmlTable(HttpContext.Current.Request.ServerVariables);
-            return MyHTML;
+            myHtml += "<BR><BR>" + heading.Replace("<!--HEADER-->", "Server Variables");
+            myHtml += CollectionToHtmlTable(HttpContext.Current.Request.ServerVariables);
+            return myHtml;
         }
 
         /// <summary>
-        /// Converts to htmltable.
+        /// Converts to html table.
         /// </summary>
-        /// <param name="Collection">The collection.</param>
+        /// <param name="collection">The collection.</param>
         /// <returns>System.String.</returns>
-        private static string CollectionToHtmlTable(NameValueCollection Collection)
+        private static string CollectionToHtmlTable(NameValueCollection collection)
         {
-            string TD;
-            string MyHTML;
-            int i;
-            TD = "<TD><FONT face=\"Arial\" size=\"2\"><!--VALUE--></FONT></TD>";
-            MyHTML = "<TABLE width=\"100%\">" + " <TR bgcolor=\"#C0C0C0\">" + TD.Replace("<!--VALUE-->", " <B>Name</B>") + " " + TD.Replace("<!--VALUE-->", " <B>Value</B>") + "</TR>";
+            var td = "<TD><FONT face=\"Arial\" size=\"2\"><!--VALUE--></FONT></TD>";
+            var myHtml = "<TABLE width=\"100%\">" + " <TR bgcolor=\"#C0C0C0\">" + td.Replace("<!--VALUE-->", " <B>Name</B>") + " " + td.Replace("<!--VALUE-->", " <B>Value</B>") + "</TR>";
             // No Body? -> N/A
-            if (Collection.Count <= 0)
+            if (collection.Count <= 0)
             {
-                Collection = new NameValueCollection();
-                Collection.Add("N/A", "");
+                collection = new NameValueCollection {{"N/A", ""}};
             }
             else
             {
                 // Table Body
-                var loopTo = Collection.Count - 1;
+                var loopTo = collection.Count - 1;
+                int i;
                 for (i = 0; i <= loopTo; i++)
-                    MyHTML += "<TR valign=\"top\" bgcolor=\"#EEEEEE\">" + TD.Replace("<!--VALUE-->", Collection.Keys[i]) + " " + TD.Replace("<!--VALUE-->", Collection[i]) + "</TR> ";
+                    myHtml += "<TR valign=\"top\" bgcolor=\"#EEEEEE\">" + td.Replace("<!--VALUE-->", collection.Keys[i]) + " " + td.Replace("<!--VALUE-->", collection[i]) + "</TR> ";
             }
             // Table Footer
-            return MyHTML + "</TABLE>";
+            return myHtml + "</TABLE>";
         }
 
         /// <summary>
         /// Converts HttpCookieCollection to NameValueCollection
         /// </summary>
-        /// <param name="Collection">The collection.</param>
+        /// <param name="collection">The collection.</param>
         /// <returns>System.String.</returns>
-        private static string CollectionToHtmlTable(HttpCookieCollection Collection)
+        private static string CollectionToHtmlTable(HttpCookieCollection collection)
         {
-            var NVC = new NameValueCollection();
-            int i;
-            string Value;
+            var nvc = new NameValueCollection();
             try
             {
-                if (Collection.Count > 0)
+                if (collection.Count > 0)
                 {
-                    var loopTo = Collection.Count - 1;
+                    var loopTo = collection.Count - 1;
+                    int i;
                     for (i = 0; i <= loopTo; i++)
-                        NVC.Add($"{i}", Collection[i].Value);
+                        nvc.Add($"{i}", collection[i].Value);
                 }
 
-                Value = CollectionToHtmlTable(NVC);
-                return Value;
+                var value = CollectionToHtmlTable(nvc);
+                return value;
             }
-            catch (Exception MyError)
+            catch (Exception myError)
             {
-                return MyError.ToString();
+                return myError.ToString();
             }
         }
 
         /// <summary>
         /// Converts HttpSessionState to NameValueCollection
         /// </summary>
-        /// <param name="Collection">The collection.</param>
+        /// <param name="collection">The collection.</param>
         /// <returns>System.String.</returns>
-        private static string CollectionToHtmlTable(System.Web.SessionState.HttpSessionState Collection)
+        private static string CollectionToHtmlTable(System.Web.SessionState.HttpSessionState collection)
         {
-            var NVC = new NameValueCollection();
-            int i;
-            string Value;
-            if (Collection.Count > 0)
+            var nvc = new NameValueCollection();
+            if (collection.Count > 0)
             {
-                var loopTo = Collection.Count - 1;
+                var loopTo = collection.Count - 1;
+                int i;
                 for (i = 0; i <= loopTo; i++)
-                    NVC.Add($"{i}", Collection[i].ToString());
+                    nvc.Add($"{i}", collection[i].ToString());
             }
 
-            Value = CollectionToHtmlTable(NVC);
-            return Value;
+            var value = CollectionToHtmlTable(nvc);
+            return value;
         }
         /// <summary>
         /// Cleans the HTML.
         /// </summary>
-        /// <param name="HTML">The HTML.</param>
+        /// <param name="html">The HTML.</param>
         /// <returns>System.String.</returns>
-        private static string CleanHTML(string HTML)
+        private static string CleanHtml(string html)
         {
-            if (HTML.Length != 0)
+            if (html.Length != 0)
             {
-                HTML.Replace("<", "<").Replace(@"\r\n", "<BR>").Replace("&", "&").Replace(" ", " ");
+                html.Replace("<", "<").Replace(@"\r\n", "<BR>").Replace("&", "&").Replace(" ", " ");
             }
             else
             {
-                HTML = "";
+                html = "";
             }
 
-            return HTML;
+            return html;
         }
 
 
