@@ -68,7 +68,7 @@ namespace BurnSoft.Web.ErrorHandling
             var heading = "<TABLE BORDER=\"0\" WIDTH=\"100%\" CELLPADDING=\"1\" CELLSPACING=\"0\"><TR><TD bgcolor=\"RoyalBlue\" COLSPAN=\"2\"><FONT face=\"Arial\" color=\"white\"><B> <!--HEADER--></B></FONT></TD></TR></TABLE>";
             var myHtml = "<FONT face=\"Arial\" size=\"4\" color=\"red\">Error - " + ex.Message + "</FONT><BR><BR>";
             errorInfo.Add("Message", CleanHtml(ex.Message));
-            HttpContext.Current.Session["ERRORMESSAGE"] = CleanHtml(ex.Message);
+            if (HttpContext.Current.Session["ERRORMESSAGE"] != null) HttpContext.Current.Session["ERRORMESSAGE"] = CleanHtml(ex.Message);
             errorInfo.Add("Source", CleanHtml(ex.Source));
             errorInfo.Add("TargetSite", CleanHtml(ex.TargetSite.ToString()));
             errorInfo.Add("StackTrace", CleanHtml(ex.StackTrace));
@@ -128,12 +128,15 @@ namespace BurnSoft.Web.ErrorHandling
             var nvc = new NameValueCollection();
             try
             {
-                if (collection.Count > 0)
+                if (collection != null)
                 {
-                    var loopTo = collection.Count - 1;
-                    int i;
-                    for (i = 0; i <= loopTo; i++)
-                        nvc.Add($"{i}", collection[i].Value);
+                    if (collection.Count > 0)
+                    {
+                        var loopTo = collection.Count - 1;
+                        int i;
+                        for (i = 0; i <= loopTo; i++)
+                            nvc.Add($"{i}", collection[i].Value);
+                    }
                 }
 
                 var value = CollectionToHtmlTable(nvc);
@@ -153,12 +156,15 @@ namespace BurnSoft.Web.ErrorHandling
         private static string CollectionToHtmlTable(System.Web.SessionState.HttpSessionState collection)
         {
             var nvc = new NameValueCollection();
-            if (collection.Count > 0)
+            if (collection != null)
             {
-                var loopTo = collection.Count - 1;
-                int i;
-                for (i = 0; i <= loopTo; i++)
-                    nvc.Add($"{i}", collection[i].ToString());
+                if (collection.Count > 0)
+                {
+                    var loopTo = collection.Count - 1;
+                    int i;
+                    for (i = 0; i <= loopTo; i++)
+                        nvc.Add($"{i}", collection[i].ToString());
+                }
             }
 
             var value = CollectionToHtmlTable(nvc);
