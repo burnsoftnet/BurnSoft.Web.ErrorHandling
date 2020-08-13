@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("BurnSoft.Web.ErrorHandling")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Simple Library that can help send error messages from your website to you or your support email about any application exception errors that have occurred in a pretty HTML report")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("www.burnsoft.net")]
 [assembly: AssemblyProduct("BurnSoft.Web.ErrorHandling")]
