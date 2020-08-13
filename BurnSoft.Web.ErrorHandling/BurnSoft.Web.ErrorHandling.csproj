@@ -52,7 +52,7 @@
     <None Include="BurnSoft.Web.ErrorHandling.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="icon.png" />
+    <Content Include="bsweicon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -9,7 +9,7 @@
 	  <projectUrl>https://github.com/burnsoftnet/BurnSoft.Web.ErrorHandling.git</projectUrl>
 	  <repository type="git" url="https://github.com/burnsoftnet/BurnSoft.Web.ErrorHandling.git" />
 	  <iconUrl>https://avatars0.githubusercontent.com/u/24593581?s=460</iconUrl>
-	  <icon>icon.png</icon>
+	  <icon>bsweicon.png</icon>
 	  <license type="expression">MIT</license>
 	  <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
@@ -18,7 +18,7 @@
 	  <tags>burnsoft web general main error errorhandling</tags>
   </metadata>
 	<files>
-		<file src="icon.png" target="" />
+		<file src="bsweicon.png" target="" />
 		<file src="bin/$configuration$/$id$.chm" target="content/$id$.chm" />
 	</files>
 </package>
