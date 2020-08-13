@@ -68,7 +68,6 @@ namespace BurnSoft.Web.ErrorHandling
             var heading = "<TABLE BORDER=\"0\" WIDTH=\"100%\" CELLPADDING=\"1\" CELLSPACING=\"0\"><TR><TD bgcolor=\"RoyalBlue\" COLSPAN=\"2\"><FONT face=\"Arial\" color=\"white\"><B> <!--HEADER--></B></FONT></TD></TR></TABLE>";
             var myHtml = "<FONT face=\"Arial\" size=\"4\" color=\"red\">Error - " + ex.Message + "</FONT><BR><BR>";
             errorInfo.Add("Message", CleanHtml(ex.Message));
-            if (HttpContext.Current.Session["ERRORMESSAGE"] != null) HttpContext.Current.Session["ERRORMESSAGE"] = CleanHtml(ex.Message);
             errorInfo.Add("Source", CleanHtml(ex.Source));
             errorInfo.Add("TargetSite", CleanHtml(ex.TargetSite.ToString()));
             errorInfo.Add("StackTrace", CleanHtml(ex.StackTrace));
