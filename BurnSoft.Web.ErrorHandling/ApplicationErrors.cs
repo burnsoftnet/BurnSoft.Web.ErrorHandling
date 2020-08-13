@@ -13,25 +13,19 @@ namespace BurnSoft.Web.ErrorHandling
 {
     public class ApplicationErrors
     {
-        /// <summary>
-        /// Sends the HTML error.
-        /// </summary>
-        /// <param name="Ex">The ex.</param>
-        /// <param name="EmailAddress">The email address.</param>
-        public void SendHtmlError(Exception Ex, string EmailAddress)
+        
+        public static void SendHtmlError(Exception Ex, string to, string from, string smtpServer,string smtpUser, string smtpPwd )
         {
-            var strTo = new MailAddress(EmailAddress);
-            var myFrom = new MailAddress(ConfigurationManager.AppSettings["MySMTPServer_USER"]);
+            var strTo = new MailAddress(to);
+            var myFrom = new MailAddress(from);
             var Message = new MailMessage(myFrom, strTo);
             Message.IsBodyHtml = true;
             Message.Subject = HttpContext.Current.Request.ServerVariables["HTTP_HOST"] + " - An Application Error Has occured!";
             Message.Body = GetHTMLError(Ex);
-            var Client = new SmtpClient(HttpContext.Current.Application["MySMTPServer"]);
-            if (ConfigurationManager.AppSettings["MySMTPServer_PASSWORD"].Length > 0)
+            var Client = new SmtpClient(smtpServer);
+            if (smtpPwd?.Length > 0)
             {
-                string mUID = ConfigurationManager.AppSettings["MySMTPServer_USER"];
-                string mPWD = System.Configuration.ConfigurationManager.AppSettings["MySMTPServer_PASSWORD"];
-                Client.Credentials = new NetworkCredential(mUID, mPWD);
+                Client.Credentials = new NetworkCredential(smtpUser, smtpPwd);
             }
 
             Client.Send(Message);
@@ -42,7 +36,7 @@ namespace BurnSoft.Web.ErrorHandling
         /// </summary>
         /// <param name="Ex">The ex.</param>
         /// <returns>System.String.</returns>
-        public string GetHTMLError(Exception Ex)
+        public static string GetHTMLError(Exception Ex)
         {
             string Heading;
             string MyHTML;
@@ -79,7 +73,7 @@ namespace BurnSoft.Web.ErrorHandling
         /// </summary>
         /// <param name="Collection">The collection.</param>
         /// <returns>System.String.</returns>
-        public string CollectionToHtmlTable(NameValueCollection Collection)
+        private static string CollectionToHtmlTable(NameValueCollection Collection)
         {
             string TD;
             string MyHTML;
@@ -108,7 +102,7 @@ namespace BurnSoft.Web.ErrorHandling
         /// </summary>
         /// <param name="Collection">The collection.</param>
         /// <returns>System.String.</returns>
-        private string CollectionToHtmlTable(HttpCookieCollection Collection)
+        private static string CollectionToHtmlTable(HttpCookieCollection Collection)
         {
             var NVC = new NameValueCollection();
             int i;
@@ -119,7 +113,7 @@ namespace BurnSoft.Web.ErrorHandling
                 {
                     var loopTo = Collection.Count - 1;
                     for (i = 0; i <= loopTo; i++)
-                        NVC.Add(i, Collection[i].Value);
+                        NVC.Add($"{i}", Collection[i].Value);
                 }
 
                 Value = CollectionToHtmlTable(NVC);
@@ -136,7 +130,7 @@ namespace BurnSoft.Web.ErrorHandling
         /// </summary>
         /// <param name="Collection">The collection.</param>
         /// <returns>System.String.</returns>
-        private string CollectionToHtmlTable(System.Web.SessionState.HttpSessionState Collection)
+        private static string CollectionToHtmlTable(System.Web.SessionState.HttpSessionState Collection)
         {
             var NVC = new NameValueCollection();
             int i;
@@ -145,7 +139,7 @@ namespace BurnSoft.Web.ErrorHandling
             {
                 var loopTo = Collection.Count - 1;
                 for (i = 0; i <= loopTo; i++)
-                    NVC.Add(i, Collection[i].ToString());
+                    NVC.Add($"{i}", Collection[i].ToString());
             }
 
             Value = CollectionToHtmlTable(NVC);
@@ -156,7 +150,7 @@ namespace BurnSoft.Web.ErrorHandling
         /// </summary>
         /// <param name="HTML">The HTML.</param>
         /// <returns>System.String.</returns>
-        private string CleanHTML(string HTML)
+        private static string CleanHTML(string HTML)
         {
             if (HTML.Length != 0)
             {
