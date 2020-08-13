@@ -19,12 +19,13 @@ namespace BurnSoft.Web.ErrorHandling
         /// <summary>
         /// Send the HTML report of the exception that occured to support or the developer
         /// </summary>
-        /// <param name="ex"></param>
-        /// <param name="to"></param>
-        /// <param name="from"></param>
-        /// <param name="smtpServer"></param>
-        /// <param name="smtpUser"></param>
-        /// <param name="smtpPwd"></param>
+        /// <param name="ex">Exception that you want to send</param>
+        /// <param name="to">Send To</param>
+        /// <param name="from">Send Form</param>
+        /// <param name="smtpServer">SMTP Server</param>
+        /// <param name="smtpUser">SMTP User login</param>
+        /// <param name="smtpPwd">SMTP User Name password</param>
+        /// <param name="port">SMTP Server Port</param>
         /// <example>
         ///  void Application_Error(object sender, EventArgs e) <br/>
         /// { <br/>
@@ -37,15 +38,14 @@ namespace BurnSoft.Web.ErrorHandling
         ///    Session["ERRORMESSAGE"] = ""; <br/>
         /// } <br/>
         /// </example>
-        public static void SendHtmlError(Exception ex, string to, string from, string smtpServer,string smtpUser, string smtpPwd )
+        public static void SendHtmlError(Exception ex, string to, string from, string smtpServer,string smtpUser, string smtpPwd, int port = 25 )
         {
             var strTo = new MailAddress(to);
             var myFrom = new MailAddress(from);
             var message = new MailMessage(myFrom, strTo)
             {
                 IsBodyHtml = true,
-                Subject = HttpContext.Current.Request.ServerVariables["HTTP_HOST"] +
-                          " - An Application Error Has occured!",
+                Subject = GetSubject(),
                 Body = GetHtmlError(ex)
             };
             var client = new SmtpClient(smtpServer);
@@ -54,11 +54,21 @@ namespace BurnSoft.Web.ErrorHandling
                 client.Credentials = new NetworkCredential(smtpUser, smtpPwd);
             }
 
+            client.Port = port;
             client.Send(message);
+        }
+        /// <summary>
+        /// Gets the subject.  This is exposed to the public in case you need to use your own type of smtp server
+        /// </summary>
+        /// <returns>System.String.</returns>
+        public static string GetSubject()
+        {
+            return $"{HttpContext.Current.Request.ServerVariables["HTTP_HOST"]} - An Application Error Has occured!";
         }
 
         /// <summary>
         /// Returns HTML an formatted error message.
+        /// This is exposed to the public in case you need to use your own type of smtp server
         /// </summary>
         /// <param name="ex">The ex.</param>
         /// <returns>System.String.</returns>
